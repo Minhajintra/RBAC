@@ -1,0 +1,977 @@
+================================================================================
+INTRASHIP — USER & ACCESS MANAGEMENT (UAM) ENTERPRISE PORTAL
+PROJECT FOLDER STRUCTURE, FILE-BY-FILE PURPOSE, AND SYSTEM FLOW SPECIFICATION
+================================================================================
+
+PROJECT OVERVIEW:
+IntraShip UAM is a production-grade enterprise User and Access Management portal built 
+with Next.js 15 (App Router), React 19, TypeScript, and Tailwind CSS. It supports 
+Role-Based Access Control (RBAC), multi-factor authentication (MFA/OTP), jurisdictional 
+scope assignment (Province -> Region -> District -> Sub-district -> Site), audit 
+logging with CSV exports, dynamic analytics charts, and seamless fallback between a 
+live FastAPI backend and local JSON mock persistence.
+
+================================================================================
+TABLE OF CONTENTS:
+================================================================================
+1. TECHNOLOGY STACK & CORE DEPENDENCIES
+2. COMPLETE PROJECT DIRECTORY & FOLDER STRUCTURE
+3. FILE-BY-FILE PURPOSE (DETAILED EXPLANATION OF EVERY FILE)
+   3.1 Root Configuration & Environment Files
+   3.2 Public Static Assets
+   3.3 Application Core & Global Layouts (src/app, src/middleware.ts)
+   3.4 Authentication Module (src/app/(auth)/...)
+   3.5 Dashboard & Administration Modules (src/app/(dashboard)/...)
+       - Dashboard & Analytics (dashboard/)
+       - Users Management (users/)
+       - Roles & Permission Matrix (roles/)
+       - Audit Logs (audit/)
+   3.6 Internal Next.js API Routes (src/app/api/auth/...)
+   3.7 Global UI & Layout Components (src/components/...)
+   3.8 Context & State Management (src/context/...)
+   3.9 Local Mock Data & File Persistence (src/data/mock, .data/)
+   3.10 Utility Libraries & API Clients (src/lib/...)
+   3.11 Service Layer (src/services/...)
+   3.12 Global TypeScript Contracts & Types (src/types/...)
+4. SYSTEM ARCHITECTURE & END-TO-END FLOWS
+   4.1 Flow 1: Authentication & Two-Factor (OTP) Flow
+   4.2 Flow 2: Route Protection & Middleware Guard Flow
+   4.3 Flow 3: Role-Based Access Control (RBAC) & Permission Guard Flow
+   4.4 Flow 4: User Management (CRUD) & Store Persistence Flow
+   4.5 Flow 5: Jurisdictional Scope Hierarchy Assignment Flow
+   4.6 Flow 6: Dashboard Analytics & KPI Data Flow
+   4.7 Flow 7: Roles & Permission Matrix Authoring Flow
+   4.8 Flow 8: Audit Logging & Traceability Flow
+   4.9 Flow 9: Backend Connection & Offline Fallback Architecture
+
+================================================================================
+1. TECHNOLOGY STACK & CORE DEPENDENCIES
+================================================================================
+- Framework: Next.js 15.1.0 (App Router, Server Actions, Route Handlers)
+- UI Library: React 19.0.0
+- Language: TypeScript 5
+- Styling: Tailwind CSS 3.4.17 + PostCSS + Autoprefixer
+- Icons: Lucide React (0.468.0)
+- Form Management & Validation: React Hook Form (7.91.0) + Zod (4.6.7)
+- Data Visualization / Charts: Recharts (3.10.1)
+- HTTP Client: Axios (1.21.0)
+- Backend Target: Python FastAPI / SQLAlchemy backend (with local mock fallbacks)
+
+================================================================================
+2. COMPLETE PROJECT DIRECTORY & FOLDER STRUCTURE
+================================================================================
+
+my-app/
+├── .data/
+│   └── users-store.json
+├── public/
+│   ├── favicon.ico
+│   └── images/
+│       └── login-bg.webp
+├── src/
+│   ├── app/
+│   │   ├── (auth)/
+│   │   │   ├── layout.tsx
+│   │   │   ├── forgot-password/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── actions/
+│   │   │   │   │   └── forgotPassword.ts
+│   │   │   │   ├── components/
+│   │   │   │   │   └── ForgotPasswordForm.tsx
+│   │   │   │   ├── schema/
+│   │   │   │   │   └── forgotPasswordSchema.ts
+│   │   │   │   └── types/
+│   │   │   │       └── forgotPassword.types.ts
+│   │   │   ├── login/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── actions/
+│   │   │   │   │   └── login.ts
+│   │   │   │   ├── components/
+│   │   │   │   │   └── LoginForm.tsx
+│   │   │   │   ├── schema/
+│   │   │   │   │   └── loginSchema.ts
+│   │   │   │   └── types/
+│   │   │   │       └── login.types.ts
+│   │   │   ├── reset-password/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── actions/
+│   │   │   │   │   └── resetPassword.ts
+│   │   │   │   ├── components/
+│   │   │   │   │   └── ResetPasswordForm.tsx
+│   │   │   │   ├── schema/
+│   │   │   │   │   └── resetPasswordSchema.ts
+│   │   │   │   └── types/
+│   │   │   │       └── resetPassword.types.ts
+│   │   │   └── verify-otp/
+│   │   │       ├── page.tsx
+│   │   │       ├── actions/
+│   │   │       │   └── verifyOtp.ts
+│   │   │       ├── components/
+│   │   │       │   └── VerifyOtpForm.tsx
+│   │   │       ├── schema/
+│   │   │       │   └── verifyOtpSchema.ts
+│   │   │       └── types/
+│   │   │           └── verifyOtp.types.ts
+│   │   ├── (dashboard)/
+│   │   │   ├── layout.tsx
+│   │   │   ├── audit/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── actions/
+│   │   │   │   │   └── audit.ts
+│   │   │   │   ├── components/
+│   │   │   │   │   └── AuditLogsModule.tsx
+│   │   │   │   └── types/
+│   │   │   │       └── audit.types.ts
+│   │   │   ├── dashboard/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── actions/
+│   │   │   │   │   └── getDashboard.ts
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── Dashboard.tsx
+│   │   │   │   │   ├── cards/
+│   │   │   │   │   │   └── KpiCardsGrid.tsx
+│   │   │   │   │   ├── charts/
+│   │   │   │   │   │   ├── InterfaceAccessChart.tsx
+│   │   │   │   │   │   ├── LoginAttemptsChart.tsx
+│   │   │   │   │   │   └── RoleUsersChart.tsx
+│   │   │   │   │   └── tables/
+│   │   │   │   │       └── LoginHistoryTable.tsx
+│   │   │   │   └── types/
+│   │   │   │       └── dashboard.types.ts
+│   │   │   ├── roles/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── actions/
+│   │   │   │   │   └── roles.ts
+│   │   │   │   ├── components/
+│   │   │   │   │   └── CreateEditRoleModule.tsx
+│   │   │   │   ├── create/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── types/
+│   │   │   │       └── role.types.ts
+│   │   │   └── users/
+│   │   │       ├── page.tsx
+│   │   │       ├── actions/
+│   │   │       │   └── users.ts
+│   │   │       ├── components/
+│   │   │       │   ├── DeleteUserDialog.tsx
+│   │   │       │   ├── UserCategoriesFooter.tsx
+│   │   │       │   ├── UserFilters.tsx
+│   │   │       │   ├── UserFormModal.tsx
+│   │   │       │   ├── UserPagination.tsx
+│   │   │       │   ├── UserScopeModal.tsx
+│   │   │       │   ├── UsersModule.tsx
+│   │   │       │   ├── UserStatsCards.tsx
+│   │   │       │   ├── UserTable.tsx
+│   │   │       │   └── ViewUserModal.tsx
+│   │   │       ├── data/
+│   │   │       │   ├── userDataAccess.ts
+│   │   │       │   └── users.json
+│   │   │       ├── schema/
+│   │   │       │   └── userSchema.ts
+│   │   │       └── types/
+│   │   │           └── user.types.ts
+│   │   ├── api/
+│   │   │   └── auth/
+│   │   │       ├── forgot-password/
+│   │   │       │   └── route.ts
+│   │   │       ├── login/
+│   │   │       │   └── route.ts
+│   │   │       ├── logout/
+│   │   │       │   └── route.ts
+│   │   │       ├── me/
+│   │   │       │   └── route.ts
+│   │   │       ├── refresh/
+│   │   │       │   └── route.ts
+│   │   │       ├── reset-password/
+│   │   │       │   └── route.ts
+│   │   │       ├── send-otp/
+│   │   │       │   └── route.ts
+│   │   │       └── verify-otp/
+│   │   │           └── route.ts
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── not-found.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Header.tsx
+│   │   │   ├── Logo.tsx
+│   │   │   └── Sidebar.tsx
+│   │   └── ui/
+│   │       ├── Alert.tsx
+│   │       ├── Badge.tsx
+│   │       ├── Button.tsx
+│   │       ├── Card.tsx
+│   │       ├── ChartCard.tsx
+│   │       ├── Checkbox.tsx
+│   │       ├── EmptyState.tsx
+│   │       ├── ForbiddenState.tsx
+│   │       ├── index.ts
+│   │       ├── Input.tsx
+│   │       ├── Loader.tsx
+│   │       ├── Modal.tsx
+│   │       ├── Pagination.tsx
+│   │       ├── PasswordInput.tsx
+│   │       ├── PermissionGuard.tsx
+│   │       ├── Select.tsx
+│   │       ├── Table.tsx
+│   │       └── Toast.tsx
+│   ├── context/
+│   │   ├── auth-context.tsx
+│   │   └── permission-context.tsx
+│   ├── data/
+│   │   └── mock/
+│   │       ├── audit-logs.json
+│   │       ├── permissions.json
+│   │       ├── roles.json
+│   │       └── scope.json
+│   ├── lib/
+│   │   ├── api-client.ts
+│   │   ├── auth-storage.ts
+│   │   ├── config.ts
+│   │   └── data.ts
+│   ├── services/
+│   │   ├── auth/
+│   │   │   ├── getcurrentuser.ts
+│   │   │   ├── getrefreshtoken.ts
+│   │   │   └── login.ts
+│   │   ├── auth.service.ts
+│   │   ├── dashboard.service.ts
+│   │   ├── permission.service.ts
+│   │   └── scope.service.ts
+│   ├── types/
+│   │   ├── common.types.ts
+│   │   ├── permissions.types.ts
+│   │   └── scope.types.ts
+│   └── middleware.ts
+├── .env
+├── .gitignore
+├── eslint.config.mjs
+├── next-env.d.ts
+├── next.config.ts
+├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── README.md
+├── tailwind.config.js
+├── tsconfig.json
+└── tsconfig.tsbuildinfo
+
+================================================================================
+3. FILE-BY-FILE PURPOSE (DETAILED EXPLANATION OF EVERY FILE)
+================================================================================
+
+--------------------------------------------------------------------------------
+3.1 ROOT CONFIGURATION & ENVIRONMENT FILES
+--------------------------------------------------------------------------------
+1. .env
+   - Purpose: Environment variables file for local development. Holds 
+     `BACKEND_BASE_URL` (the backend server address e.g. FastAPI URL or tunnel URL) 
+     and public API configuration flags.
+
+2. .gitignore
+   - Purpose: Git source-control ignore rules. Excludes node_modules, .next build 
+     outputs, environment files (.env.local), and system build info from commits.
+
+3. eslint.config.mjs
+   - Purpose: Modern flat ESLint configuration file for Next.js and TypeScript. 
+     Configures code quality rules and syntax linting standards.
+
+4. next-env.d.ts
+   - Purpose: TypeScript compiler definition file automatically maintained by 
+     Next.js. Ensures TypeScript recognizes Next.js types and image imports.
+
+5. next.config.ts
+   - Purpose: Next.js application configuration file written in TypeScript. 
+     Configures compiler options, asset prefixes, rewrites, and experimental flags.
+
+6. package.json
+   - Purpose: Node.js project manifest. Defines project metadata, build scripts 
+     (`npm run dev`, `build`, `start`, `lint`), and all production / dev dependencies.
+
+7. package-lock.json
+   - Purpose: Automatically generated exact dependency lockfile ensuring identical 
+     package installations across different developer environments.
+
+8. postcss.config.js
+   - Purpose: PostCSS configuration file. Connects Tailwind CSS and Autoprefixer 
+     to process utility styles for browser compatibility.
+
+9. README.md
+   - Purpose: Project documentation and quick-start instructions for developers.
+
+10. tailwind.config.js
+    - Purpose: Tailwind CSS design system configuration. Defines theme colors 
+      (IntraShip custom forest green shades like #16382b, #225740), font families, 
+      screen breakpoints, and content file paths.
+
+11. tsconfig.json
+    - Purpose: TypeScript compiler options configuration. Sets target ECMAScript 
+      version, module resolution, strict mode, and path aliases (e.g. `@/*` -> `./src/*`).
+
+12. tsconfig.tsbuildinfo
+    - Purpose: Incremental TypeScript build cache generated by `tsc` to speed up 
+      type-checking during successive runs.
+
+--------------------------------------------------------------------------------
+3.2 LOCAL PERSISTENCE & PUBLIC ASSETS
+--------------------------------------------------------------------------------
+13. .data/users-store.json
+    - Purpose: Server-side runtime JSON database for persisting user operations 
+      (create, edit, delete, toggle status, assign scope) during local testing 
+      when a live backend database is offline.
+
+14. public/favicon.ico
+    - Purpose: Browser tab icon representing the IntraShip portal.
+
+15. public/images/login-bg.webp
+    - Purpose: High-resolution branded background illustration used on the 
+      login and authentication split-screen pages.
+
+--------------------------------------------------------------------------------
+3.3 APPLICATION CORE & GLOBAL LAYOUTS (src/app, src/middleware.ts)
+--------------------------------------------------------------------------------
+16. src/middleware.ts
+    - Purpose: Edge middleware executed before requests reach page routes. 
+      Inspects the `uam_verified` authentication cookie. If an unverified user 
+      attempts to access `/dashboard` or `/users`, it redirects them to `/login`. 
+      If an already verified user visits `/login`, it redirects them to `/dashboard`.
+
+17. src/app/globals.css
+    - Purpose: Root global CSS stylesheet importing Tailwind directives (@tailwind base, 
+      components, utilities) and setting global scrollbar and typography rules.
+
+18. src/app/layout.tsx
+    - Purpose: Root HTML shell layout wrapping the entire application. Injects 
+      HTML/body tags, global metadata, font styles, and wraps all pages inside 
+      `<AuthProvider>`.
+
+19. src/app/not-found.tsx
+    - Purpose: Custom 404 error page displayed when users navigate to non-existent 
+      routes. Features enterprise styling and a direct button to return to `/dashboard`.
+
+20. src/app/page.tsx
+    - Purpose: Application entry root route (`/`). Uses Next.js `redirect("/login")` 
+      to automatically send visitors straight to the login portal.
+
+--------------------------------------------------------------------------------
+3.4 AUTHENTICATION MODULE (src/app/(auth)/...)
+--------------------------------------------------------------------------------
+21. src/app/(auth)/layout.tsx
+    - Purpose: Route group layout for authentication screens (login, verify-otp, 
+      forgot-password, reset-password). Provides a clean wrapper without the dashboard sidebar.
+
+-- Login Sub-Module:
+22. src/app/(auth)/login/page.tsx
+    - Purpose: The main login screen. Renders IntraShip branding, security badges, 
+      system mission statements, and embeds the `<LoginForm />`.
+
+23. src/app/(auth)/login/actions/login.ts
+    - Purpose: Server Action `loginAction(payload)` invoked by the login form. 
+      Delegates the authentication request to `authService.login()`.
+
+24. src/app/(auth)/login/components/LoginForm.tsx
+    - Purpose: Client-side interactive login form. Uses React Hook Form with Zod 
+      validation, email/username input, password visibility toggle, remember-me checkbox, 
+      and triggers transition to OTP verification on valid credentials.
+
+25. src/app/(auth)/login/schema/loginSchema.ts
+    - Purpose: Zod schema enforcing validation rules for the login form (e.g. required 
+      identifier, password minimum length, custom error messages).
+
+26. src/app/(auth)/login/types/login.types.ts
+    - Purpose: TypeScript interface definitions for login credentials (`LoginRequest`), 
+      authenticated user payload (`AuthUser`), and API responses (`LoginResponse`).
+
+-- Verify OTP (2FA) Sub-Module:
+27. src/app/(auth)/verify-otp/page.tsx
+    - Purpose: Multi-Factor Authentication screen. Prompts the user to enter a 
+      6-digit one-time verification code sent to their registered email.
+
+28. src/app/(auth)/verify-otp/actions/verifyOtp.ts
+    - Purpose: Server Action `verifyOtpAction(payload)` delegating verification 
+      code validation to `authService.verifyOtp()`.
+
+29. src/app/(auth)/verify-otp/components/VerifyOtpForm.tsx
+    - Purpose: Interactive OTP input component featuring 6 individual auto-advancing 
+      digit boxes, countdown timer, resend OTP trigger, and dev-code auto-population helper.
+
+30. src/app/(auth)/verify-otp/schema/verifyOtpSchema.ts
+    - Purpose: Zod validation schema ensuring the OTP code consists of exactly 6 
+      numeric digits.
+
+31. src/app/(auth)/verify-otp/types/verifyOtp.types.ts
+    - Purpose: TypeScript types for OTP request (`VerifyOtpRequest`), OTP delivery 
+      payload (`SendOtpRequest`), and server response envelopes.
+
+-- Forgot Password Sub-Module:
+32. src/app/(auth)/forgot-password/page.tsx
+    - Purpose: Password recovery initiation page where users enter their email 
+      to receive a password reset token/code.
+
+33. src/app/(auth)/forgot-password/actions/forgotPassword.ts
+    - Purpose: Server Action `forgotPasswordAction(payload)` invoking `authService.forgotPassword()`.
+
+34. src/app/(auth)/forgot-password/components/ForgotPasswordForm.tsx
+    - Purpose: Form component allowing users to submit their email address with 
+      loading states and instant feedback.
+
+35. src/app/(auth)/forgot-password/schema/forgotPasswordSchema.ts
+    - Purpose: Zod schema validating email formatting for the password reset request.
+
+36. src/app/(auth)/forgot-password/types/forgotPassword.types.ts
+    - Purpose: TypeScript contracts for forgot password request and response objects.
+
+-- Reset Password Sub-Module:
+37. src/app/(auth)/reset-password/page.tsx
+    - Purpose: Final password update page where users set and confirm their new password.
+
+38. src/app/(auth)/reset-password/actions/resetPassword.ts
+    - Purpose: Server Action `resetPasswordAction(payload)` updating the password 
+      via `authService.resetPassword()`.
+
+39. src/app/(auth)/reset-password/components/ResetPasswordForm.tsx
+    - Purpose: Form component featuring password strength checks, confirm-password 
+      matching validation, and submission feedback.
+
+40. src/app/(auth)/reset-password/schema/resetPasswordSchema.ts
+    - Purpose: Zod schema enforcing strong password requirements (uppercase, lowercase, 
+      numbers, special characters, minimum length) and confirm password equality.
+
+41. src/app/(auth)/reset-password/types/resetPassword.types.ts
+    - Purpose: TypeScript types for password reset payload (`ResetPasswordRequest`) 
+      and API confirmation responses.
+
+--------------------------------------------------------------------------------
+3.5 DASHBOARD & ADMINISTRATION MODULES (src/app/(dashboard)/...)
+--------------------------------------------------------------------------------
+42. src/app/(dashboard)/layout.tsx
+    - Purpose: Layout for the protected administrative section. Wraps all nested 
+      dashboard routes inside `<PermissionProvider>` to establish RBAC context.
+
+-- Dashboard Analytics (dashboard/):
+43. src/app/(dashboard)/dashboard/page.tsx
+    - Purpose: Main dashboard landing page presenting system KPIs, traffic analytics, 
+      and activity tables.
+
+44. src/app/(dashboard)/dashboard/actions/getDashboard.ts
+    - Purpose: Server Actions (`getDashboardKpis`, `getRoleUsers`, `getLoginAttempts`, 
+      `getInterfaceAccess`, `getLoginHistoryAction`, `getSecurityOverviewAction`) 
+      fetching analytics data from the backend or fallback service.
+
+45. src/app/(dashboard)/dashboard/components/Dashboard.tsx
+    - Purpose: Orchestrator component for the dashboard screen. Assembles the 
+      Sidebar, Header, KPI grid, analytics charts, Security Overview widget, and 
+      Login History table.
+
+46. src/app/(dashboard)/dashboard/components/cards/KpiCardsGrid.tsx
+    - Purpose: Displays top-level metrics cards (e.g., Total Active Users, MFA Adoption, 
+      Security Alerts, Role Counts) with percentage growth badges.
+
+47. src/app/(dashboard)/dashboard/components/charts/InterfaceAccessChart.tsx
+    - Purpose: Visual chart displaying breakdown of user access across web portal, 
+      mobile app, and API interfaces.
+
+48. src/app/(dashboard)/dashboard/components/charts/LoginAttemptsChart.tsx
+    - Purpose: Interactive Recharts bar chart showing successful vs failed login 
+      attempts with daily and monthly timeframe filters.
+
+49. src/app/(dashboard)/dashboard/components/charts/RoleUsersChart.tsx
+    - Purpose: Interactive Donut chart displaying the proportion of users assigned 
+      to each role (Administrators, Teachers, Staff, etc.).
+
+50. src/app/(dashboard)/dashboard/components/tables/LoginHistoryTable.tsx
+    - Purpose: Data table detailing recent authentication events, IP addresses, 
+      client devices, timestamps, and pass/fail statuses.
+
+51. src/app/(dashboard)/dashboard/types/dashboard.types.ts
+    - Purpose: TypeScript interfaces defining dashboard metrics, chart data points, 
+      login history records, and security summary contracts.
+
+-- Users Management (users/):
+52. src/app/(dashboard)/users/page.tsx
+    - Purpose: User management route entrypoint rendering `<UsersModule />`.
+
+53. src/app/(dashboard)/users/actions/users.ts
+    - Purpose: Comprehensive Server Actions for user operations:
+      - `getUsersAction`: Fetches paginated users with keyword search and role filters.
+      - `createUserAction`: Creates a new user with Zod schema validation.
+      - `updateUserAction`: Updates existing user credentials and roles.
+      - `toggleUserStatusAction`: Activates / Deactivates accounts.
+      - `deleteUserAction`: Soft-deletes or removes user accounts.
+      - `getUserStatsAction`: Computes live aggregate stats.
+
+54. src/app/(dashboard)/users/components/DeleteUserDialog.tsx
+    - Purpose: Confirmation modal preventing accidental user deletion with alert warnings.
+
+55. src/app/(dashboard)/users/components/UserCategoriesFooter.tsx
+    - Purpose: Footer breakdown summary displaying counts and percentages across 
+      user roles and statuses.
+
+56. src/app/(dashboard)/users/components/UserFilters.tsx
+    - Purpose: Filter bar providing keyword search input, role dropdown filter, 
+      and status selector (Active / Inactive / Pending).
+
+57. src/app/(dashboard)/users/components/UserFormModal.tsx
+    - Purpose: Multi-purpose modal for adding new users or editing existing user details 
+      with complete validation and role selection.
+
+58. src/app/(dashboard)/users/components/UserPagination.tsx
+    - Purpose: Pagination controls component managing page switching, items-per-page, 
+      and displaying current record bounds (e.g. "Showing 1 to 10 of 120 users").
+
+59. src/app/(dashboard)/users/components/UserScopeModal.tsx
+    - Purpose: Advanced jurisdictional assignment modal allowing administrators to 
+      assign workspace boundaries and geographical tiers (Province, Region, District, 
+      Sub-district, Site) to a selected user.
+
+60. src/app/(dashboard)/users/components/UsersModule.tsx
+    - Purpose: Main client container for the users section. Manages local state for 
+      search queries, pagination, modals (Create, Edit, View, Delete, Scope), and alerts.
+
+61. src/app/(dashboard)/users/components/UserStatsCards.tsx
+    - Purpose: Top summary cards on the users page showing Total Users, Active Users, 
+      Pending Invitations, and Inactive Accounts.
+
+62. src/app/(dashboard)/users/components/UserTable.tsx
+    - Purpose: Rich interactive table listing users with avatar initials, role badges, 
+      status indicators, and action menus (Edit, View, Assign Scope, Toggle Status, Delete).
+
+63. src/app/(dashboard)/users/components/ViewUserModal.tsx
+    - Purpose: Read-only modal displaying detailed user profile information, contact 
+      details, assigned role, and current jurisdictional scope.
+
+64. src/app/(dashboard)/users/data/userDataAccess.ts
+    - Purpose: Server-side data access layer. Handles loading and saving users to 
+      `.data/users-store.json`, falls back to `users.json`, and computes live stats.
+
+65. src/app/(dashboard)/users/data/users.json
+    - Purpose: Seed data file containing initial user records used to bootstrap 
+      the system when the database is first initialized.
+
+66. src/app/(dashboard)/users/schema/userSchema.ts
+    - Purpose: Zod validation schemas (`createUserSchema`, `updateUserSchema`) 
+      enforcing required fields, email format, phone numbers, and role assignments.
+
+67. src/app/(dashboard)/users/types/user.types.ts
+    - Purpose: Core TypeScript types for user entities, filter parameters, stats, 
+      creation payloads, and action response envelopes.
+
+-- Roles & Permission Matrix (roles/):
+68. src/app/(dashboard)/roles/page.tsx
+    - Purpose: Roles management page rendering `<CreateEditRoleModule />`.
+
+69. src/app/(dashboard)/roles/create/page.tsx
+    - Purpose: Dedicated route for creating a new role with custom permissions.
+
+70. src/app/(dashboard)/roles/actions/roles.ts
+    - Purpose: Server Actions (`getRolesAction`, `saveRoleAction`) communicating 
+      with the backend to fetch role definitions and persist custom permission matrices.
+
+71. src/app/(dashboard)/roles/components/CreateEditRoleModule.tsx
+    - Purpose: Interactive matrix component allowing administrators to define role 
+      name, description, reachable application screens, and granular CRUD permissions 
+      (Create, Read, Update, Delete) per module.
+
+72. src/app/(dashboard)/roles/types/role.types.ts
+    - Purpose: TypeScript types for role forms (`RoleFormData`), permission matrix 
+      items (`ScreenPermission`), and API response contracts.
+
+-- Audit Logs (audit/):
+73. src/app/(dashboard)/audit/page.tsx
+    - Purpose: Audit trail page rendering `<AuditLogsModule />`.
+
+74. src/app/(dashboard)/audit/actions/audit.ts
+    - Purpose: Server Actions (`getAuditLogsAction`, `exportAuditLogsAction`) fetching 
+      system activity logs from backend API or mock data, and generating downloadable CSV files.
+
+75. src/app/(dashboard)/audit/components/AuditLogsModule.tsx
+    - Purpose: Client module displaying searchable and filterable audit events 
+      (actor, action, affected resource, timestamp, pass/fail status) with an "Export CSV" feature.
+
+76. src/app/(dashboard)/audit/types/audit.types.ts
+    - Purpose: TypeScript interfaces for audit log events (`AuditEvent`), search 
+      filters (`AuditFilters`), and pagination parameters.
+
+--------------------------------------------------------------------------------
+3.6 INTERNAL NEXT.JS API ROUTES (src/app/api/auth/...)
+--------------------------------------------------------------------------------
+77. src/app/api/auth/login/route.ts
+    - Purpose: POST handler for credentials authentication. Forwards email and 
+      password to FastAPI backend `/api/v1/auth/login`. Sets HTTP-only cookies 
+      `uam_pending_email` and `uam_pending_token` for the OTP challenge.
+
+78. src/app/api/auth/verify-otp/route.ts
+    - Purpose: POST handler for OTP verification. Validates code against backend 
+      `/api/v1/auth/otp/verify`. Upon success, sets authenticated session cookies 
+      `uam_verified=true`, `uam_auth_token`, and `uam_refresh_token`.
+
+79. src/app/api/auth/send-otp/route.ts
+    - Purpose: POST handler to request a fresh OTP verification code sent to the 
+      user's email during MFA challenge or password recovery.
+
+80. src/app/api/auth/refresh/route.ts
+    - Purpose: POST handler to exchange the refresh token for a fresh access token 
+      without forcing the user to log in again.
+
+81. src/app/api/auth/logout/route.ts
+    - Purpose: POST handler that invalidates the session and deletes all auth cookies 
+      (`uam_verified`, `uam_auth_token`, `uam_refresh_token`, `uam_pending_email`).
+
+82. src/app/api/auth/me/route.ts
+    - Purpose: GET handler returning the current user profile, role, and permission 
+      summary based on the active session token.
+
+83. src/app/api/auth/forgot-password/route.ts
+    - Purpose: POST handler forwarding password reset initiation requests to the backend.
+
+84. src/app/api/auth/reset-password/route.ts
+    - Purpose: POST handler committing the new password after OTP verification.
+
+--------------------------------------------------------------------------------
+3.7 GLOBAL UI & LAYOUT COMPONENTS (src/components/...)
+--------------------------------------------------------------------------------
+-- Layout Components:
+85. src/components/layout/Header.tsx
+    - Purpose: Top application navigation bar. Features mobile sidebar hamburger toggle, 
+      active workspace title, notification bell, and user profile avatar dropdown.
+
+86. src/components/layout/Logo.tsx
+    - Purpose: Reusable branded IntraShip SVG logo with accompanying typography and link.
+
+87. src/components/layout/Sidebar.tsx
+    - Purpose: Collapsible enterprise sidebar containing navigation links (Dashboard, 
+      Users, Roles, Audit Logs, Settings), active route indicators, user badge, and logout button.
+
+-- Reusable UI Atoms & Molecules:
+88. src/components/ui/Alert.tsx
+    - Purpose: Status alert component supporting Success, Warning, Error, and Info variants.
+
+89. src/components/ui/Badge.tsx
+    - Purpose: Pill badge component for role names, statuses (Active, Inactive, Pending), 
+      and metric tags.
+
+90. src/components/ui/Button.tsx
+    - Purpose: Standardized accessible button supporting primary, secondary, outline, 
+      danger, and ghost styles, with loading spinners.
+
+91. src/components/ui/Card.tsx
+    - Purpose: Elevated card container with rounded borders, subtle shadows, and header/body slots.
+
+92. src/components/ui/ChartCard.tsx
+    - Purpose: Specialized card wrapper for Recharts components with title, subtitle, 
+      and timeframe controls.
+
+93. src/components/ui/Checkbox.tsx
+    - Purpose: Custom styled checkbox component used in tables, forms, and permission matrices.
+
+94. src/components/ui/EmptyState.tsx
+    - Purpose: Visual placeholder displayed when a search query or filter yields zero records.
+
+95. src/components/ui/ForbiddenState.tsx
+    - Purpose: Access denied screen displayed when an authenticated user lacks permission 
+      to view a specific module.
+
+96. src/components/ui/index.ts
+    - Purpose: Central barrel export index file simplifying component imports 
+      (e.g. `import { Button, Modal, Card } from "@/components/ui"`).
+
+97. src/components/ui/Input.tsx
+    - Purpose: Controlled text input component with support for error states, helper 
+      text, and leading/trailing icons.
+
+98. src/components/ui/Loader.tsx
+    - Purpose: Animated loading spinner used for page transitions and data fetching indicators.
+
+99. src/components/ui/Modal.tsx
+    - Purpose: Accessible dialog overlay component with backdrop blur, keyboard ESC 
+      listener, and focus trapping.
+
+100. src/components/ui/Pagination.tsx
+     - Purpose: Generic reusable pagination controls for slicing data tables.
+
+101. src/components/ui/PasswordInput.tsx
+     - Purpose: Secure password input field with a toggleable eye icon to show/hide plaintext.
+
+102. src/components/ui/PermissionGuard.tsx
+     - Purpose: Declarative authorization wrapper. Checks user permissions before 
+       rendering children; displays a fallback if permission is missing.
+
+103. src/components/ui/Select.tsx
+     - Purpose: Styled custom select dropdown menu.
+
+104. src/components/ui/Table.tsx
+     - Purpose: Set of modular table elements (Table, Thead, Tbody, Tr, Th, Td) with 
+       zebra striping and hover effects.
+
+105. src/components/ui/Toast.tsx
+     - Purpose: Floating notification popup for transient success and error alerts.
+
+--------------------------------------------------------------------------------
+3.8 CONTEXT & STATE MANAGEMENT (src/context/...)
+--------------------------------------------------------------------------------
+106. src/context/auth-context.tsx
+     - Purpose: Client-side React Context providing global authentication state: 
+       `user`, `accessToken`, `isAuthenticated`, `isLoading`, and methods `login()`, 
+       `verifyOtp()`, `logout()`, `refreshSession()`.
+
+107. src/context/permission-context.tsx
+     - Purpose: RBAC Context fetching the current user's permission set (`/api/v1/me/permissions`). 
+       Exposes helper functions:
+       - `can(module, action)`: Checks CRUD permissions (e.g. `can("users", "create")`).
+       - `isVisible(module)`: Checks if a navigation item or module should be rendered.
+       - `isEnabled(module)`: Checks if actions are active or disabled.
+
+--------------------------------------------------------------------------------
+3.9 LOCAL MOCK DATA & PERSISTENCE (src/data/mock/...)
+--------------------------------------------------------------------------------
+108. src/data/mock/audit-logs.json
+     - Purpose: Realistic mock audit trail data containing events, timestamps, actors, 
+       IPs, and outcomes for offline demo and testing.
+
+109. src/data/mock/permissions.json
+     - Purpose: Default permission structure defining module accessibility and CRUD rights 
+       used as fallback when the permissions API is unreachable.
+
+110. src/data/mock/roles.json
+     - Purpose: Seed role records (Super Admin, Teacher, System Auditor, Staff) with 
+       associated permission lists.
+
+111. src/data/mock/scope.json
+     - Purpose: Seed jurisdictional hierarchy data defining available Workspaces, 
+       Provinces, Regions, Districts, Sub-districts, and Health/School Sites.
+
+--------------------------------------------------------------------------------
+3.10 UTILITY LIBRARIES & API CLIENTS (src/lib/...)
+--------------------------------------------------------------------------------
+112. src/lib/api-client.ts
+     - Purpose: Centralized Axios HTTP client instance. Implements:
+       - Dynamic backend URL resolution from `.env` (`getBaseUrl`).
+       - Bearer token injection interceptors.
+       - Automatic retry and endpoint resolution (`postToBackend`).
+       - Unified error class (`ApiError`).
+
+113. src/lib/auth-storage.ts
+     - Purpose: In-memory access token storage and event subscriber. Prevents storing 
+       sensitive JWTs in insecure localStorage while notifying React context of token changes.
+
+114. src/lib/config.ts
+     - Purpose: Application configuration reader extracting backend URLs and data mode 
+       flags (`isApi`, `isMock`).
+
+115. src/lib/data.ts
+     - Purpose: IntraShip branding constants, static sidebar navigation items, step labels, 
+       and default copy used across the portal.
+
+--------------------------------------------------------------------------------
+3.11 SERVICE LAYER (src/services/...)
+--------------------------------------------------------------------------------
+116. src/services/auth.service.ts
+     - Purpose: Core authentication client service implementing methods for login, 
+       OTP verification, OTP resend, session token refresh, user profile retrieval, 
+       and logout.
+
+117. src/services/dashboard.service.ts
+     - Purpose: Client service for retrieving dashboard summary statistics, donut chart 
+       role distributions, bar chart login attempts, and security widget status.
+
+118. src/services/permission.service.ts
+     - Purpose: Service fetching user-specific permissions from `/api/v1/me/permissions` 
+       with graceful fallback to `permissions.json`.
+
+119. src/services/scope.service.ts
+     - Purpose: Service managing user scope assignments (PUT `/api/v1/users/{id}/scope`) 
+       and supplying geographic hierarchy data (workspaces, provinces, regions, sites).
+
+120. src/services/auth/getcurrentuser.ts
+     - Purpose: Service stub reserved for granular modular auth imports (implementation 
+       currently centralized in `auth.service.ts`).
+
+121. src/services/auth/getrefreshtoken.ts
+     - Purpose: Service stub reserved for modular refresh token calls.
+
+122. src/services/auth/login.ts
+     - Purpose: Service stub reserved for modular login invocations.
+
+--------------------------------------------------------------------------------
+3.12 GLOBAL TYPESCRIPT CONTRACTS & TYPES (src/types/...)
+--------------------------------------------------------------------------------
+123. src/types/common.types.ts
+     - Purpose: Common shared types across modules including `ApiResponse<T>`, 
+       `PaginationMeta`, `CurrentUser`, and re-exports of modular auth types.
+
+124. src/types/permissions.types.ts
+     - Purpose: TypeScript contracts for CRUD permissions (`CrudPermissions`), 
+       feature visibility flags (`FeaturePermissions`), and API envelopes (`MePermissionsResponse`).
+
+125. src/types/scope.types.ts
+     - Purpose: Strict TypeScript definitions for jurisdictional boundaries: 
+       `ScopeProvince`, `ScopeRegion`, `ScopeDistrict`, `ScopeSubDistrict`, `ScopeSite`, 
+       and `UserScopeAssignmentRequest`.
+
+================================================================================
+4. SYSTEM ARCHITECTURE & END-TO-END FLOWS
+================================================================================
+
+--------------------------------------------------------------------------------
+4.1 FLOW 1: AUTHENTICATION & TWO-FACTOR (OTP) FLOW
+--------------------------------------------------------------------------------
+Step 1: User visits `/login` and fills in email/username and password.
+Step 2: `<LoginForm />` validates inputs using `loginSchema.ts` (Zod).
+Step 3: On submit, client invokes `loginAction(payload)` -> `authService.login()`.
+Step 4: Request reaches Next.js Route Handler `POST /api/auth/login`.
+Step 5: The route handler calls the backend endpoint `/api/v1/auth/login`.
+        - If valid, the backend accepts credentials.
+        - Next.js sets temporary HTTP-only cookies:
+          - `uam_pending_email`: User's authenticated email.
+          - `uam_pending_token`: Partial access token.
+Step 6: User is automatically redirected to `/verify-otp`.
+Step 7: `<VerifyOtpForm />` renders 6 digit inputs and prompts user for OTP.
+Step 8: User enters 6 digits -> calls `POST /api/auth/verify-otp`.
+Step 9: Backend verifies OTP code against `/api/v1/auth/otp/verify` (or dev code fallback).
+Step 10: Upon successful verification:
+         - Secure HTTP-only cookies are established:
+           - `uam_verified = "true"` (Session indicator)
+           - `uam_auth_token` (Access JWT)
+           - `uam_refresh_token` (Long-lived refresh JWT)
+         - In-memory `authStorage.setAccessToken(token)` is populated.
+         - User is routed to `/dashboard`.
+
+--------------------------------------------------------------------------------
+4.2 FLOW 2: ROUTE PROTECTION & MIDDLEWARE GUARD FLOW
+--------------------------------------------------------------------------------
+Step 1: Whenever a request is made to `/dashboard/*` or `/users/*`, `src/middleware.ts` 
+        intercepts the request at the edge.
+Step 2: It checks the cookie `uam_verified`.
+Step 3: If `uam_verified !== "true"`:
+        - Request is redirected to `/login?from=<requested_path>`.
+Step 4: If an already authenticated user navigates to `/login`:
+        - Middleware intercepts and redirects directly to `/dashboard`.
+Step 5: When the user clicks "Logout" in `<Sidebar />`:
+        - `authService.logout()` invokes `POST /api/auth/logout`.
+        - Server deletes all session cookies.
+        - Client clears in-memory tokens and redirects to `/login`.
+
+--------------------------------------------------------------------------------
+4.3 FLOW 3: ROLE-BASED ACCESS CONTROL (RBAC) & PERMISSION GUARD FLOW
+--------------------------------------------------------------------------------
+Step 1: User enters `/dashboard` or any protected page.
+Step 2: `(dashboard)/layout.tsx` mounts `<PermissionProvider>`.
+Step 3: `PermissionProvider` queries `permissionService.getMyPermissions()`.
+Step 4: Permissions are loaded from `/api/v1/me/permissions` (or `permissions.json`).
+Step 5: Throughout the UI, elements are wrapped in `<PermissionGuard>`:
+        - Example: `<PermissionGuard module="users" action="create">`
+        - If user role lacks "can_create" for "users", the "Add User" button is hidden 
+          or rendered as disabled.
+Step 6: Navigation links in `<Sidebar />` inspect `isVisible(module)`:
+        - If a user's role cannot view "audit", the Audit Logs sidebar link is omitted.
+
+--------------------------------------------------------------------------------
+4.4 FLOW 4: USER MANAGEMENT (CRUD) & STORE PERSISTENCE FLOW
+--------------------------------------------------------------------------------
+1. Read / Search / Filter:
+   - `<UsersModule />` calls `getUsersAction({ search, role, status, page, pageSize })`.
+   - `users.ts` server action attempts to query `/api/v1/users/user-list`.
+   - If backend is offline, it queries `userDataAccess.ts`, which reads from 
+     `.data/users-store.json`.
+   - Filtered, paginated users list and computed stats are returned to `<UserTable />`.
+
+2. Create User:
+   - Admin clicks "+ Add User" -> Opens `<UserFormModal />`.
+   - Form validates fields using `createUserSchema.ts`.
+   - On submit, calls `createUserAction(formData)`.
+   - User record is persisted to backend / `.data/users-store.json`.
+   - `revalidatePath("/users")` updates the UI with a success toast.
+
+3. Edit User:
+   - Admin clicks "Edit" on a table row -> Opens `<UserFormModal editingUser={user} />`.
+   - Admin submits updates -> calls `updateUserAction(user.id, updates)`.
+   - Record updates in store; table updates instantly.
+
+4. Toggle Activation:
+   - Admin clicks "Activate / Deactivate" in row menu.
+   - Calls `toggleUserStatusAction(userId)`.
+   - Status switches between "Active" and "Inactive".
+
+5. Delete User:
+   - Admin clicks "Delete" -> Opens `<DeleteUserDialog />`.
+   - Admin confirms -> calls `deleteUserAction(userId)`.
+   - Record is removed and user count recomputed.
+
+--------------------------------------------------------------------------------
+4.5 FLOW 5: JURISDICTIONAL SCOPE HIERARCHY ASSIGNMENT FLOW
+--------------------------------------------------------------------------------
+Step 1: Admin selects "Assign Scope" on any user in `<UserTable />`.
+Step 2: `<UserScopeModal />` opens, displaying cascading dropdowns:
+        - 1. Select Workspace (e.g. "Primary Education", "Logistics Hub")
+        - 2. Select Province (e.g. "Sindh", "Punjab")
+        - 3. Select Region (cascades based on Province)
+        - 4. Select District (cascades based on Region)
+        - 5. Select Sub-District
+        - 6. Select Site (specific school, office, or facility)
+Step 3: On save, `scopeService.assignUserScope(userId, payload)` sends a PUT 
+        request to `/api/v1/users/{userId}/scope`.
+Step 4: The user's operational jurisdiction is locked and reflected in `<ViewUserModal />`.
+
+--------------------------------------------------------------------------------
+4.6 FLOW 6: DASHBOARD ANALYTICS & KPI DATA FLOW
+--------------------------------------------------------------------------------
+Step 1: User navigates to `/dashboard`.
+Step 2: `<Dashboard.tsx>` triggers parallel Server Actions:
+        - `getDashboardKpis()`: Fetches summary metrics for `<KpiCardsGrid />`.
+        - `getRoleUsers()`: Populates the donut chart in `<RoleUsersChart />`.
+        - `getLoginAttempts("daily" | "monthly")`: Populates `<LoginAttemptsChart />`.
+        - `getInterfaceAccess()`: Populates the area/bar `<InterfaceAccessChart />`.
+        - `getLoginHistoryAction()`: Populates `<LoginHistoryTable />`.
+        - `getSecurityOverviewAction()`: Populates `<SecurityWidget />`.
+Step 3: Charts render with smooth animations via Recharts.
+Step 4: Users can switch tabs (e.g. Daily vs Monthly) to trigger dynamic re-fetches.
+
+--------------------------------------------------------------------------------
+4.7 FLOW 7: ROLES & PERMISSION MATRIX AUTHORING FLOW
+--------------------------------------------------------------------------------
+Step 1: Admin navigates to `/roles` or `/roles/create`.
+Step 2: `<CreateEditRoleModule />` renders a matrix table listing all system screens:
+        - Dashboard, Users, Roles & Permissions, Audit Logs, Settings.
+Step 3: For each screen, checkboxes toggle:
+        - Screen Reachable (Visibility)
+        - Can Create
+        - Can Read
+        - Can Update
+        - Can Delete
+Step 4: Admin enters Role Name and Description, then clicks "Save Role".
+Step 5: `saveRoleAction(roleData, matrix)` posts configuration to `/api/v1/roles/create`.
+Step 6: New role becomes immediately available in User Creation dropdowns.
+
+--------------------------------------------------------------------------------
+4.8 FLOW 8: AUDIT LOGGING & TRACEABILITY FLOW
+--------------------------------------------------------------------------------
+Step 1: Admin visits `/audit`.
+Step 2: `<AuditLogsModule />` calls `getAuditLogsAction()`.
+Step 3: Logs are loaded from `/api/v1/audit/audit-logs` or fallback `audit-logs.json`.
+Step 4: Admin can search logs by user name, action type (e.g. "UPDATE_USER", "LOGIN"), 
+        or status ("Success" / "Failed").
+Step 5: Admin clicks "Export CSV":
+        - Action `exportAuditLogsAction()` formats logs into standard RFC 4180 CSV text.
+        - Browser automatically prompts download for `audit-logs-<timestamp>.csv`.
+
+--------------------------------------------------------------------------------
+4.9 FLOW 9: BACKEND CONNECTION & OFFLINE FALLBACK ARCHITECTURE
+--------------------------------------------------------------------------------
+1. Live Backend Mode:
+   - When `BACKEND_BASE_URL` is reachable, all requests pass through Axios (`api-client.ts`) 
+     to FastAPI endpoints.
+   - Authentication tokens are attached automatically via request interceptors.
+
+2. Resilient Offline / Dev Fallback Mode:
+   - If the backend is down or unreachable during local development, the application 
+     never crashes with a blank screen.
+   - Next.js Route Handlers and Server Actions catch network connection errors and 
+     gracefully switch to local mock databases (`.data/users-store.json`, `mock/*.json`).
+   - Standard development OTP code (`123456` or `000000`) allows continuous full-flow 
+     testing without email server dependency.
+
+================================================================================
+END OF SPECIFICATION FILE
+================================================================================
+
