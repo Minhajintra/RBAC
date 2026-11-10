@@ -1,8 +1,8 @@
 import React from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { getRoles, getRolesStats } from "./actions/getRoles";
 import RolesPermissionsView from "./components/RolesPermissionsView";
+import { checkServerRouteAccess } from "@/lib/auth/server-permissions";
+import { ForbiddenState } from "@/components/ui/ForbiddenState";
 
 export const metadata = {
   title: "Roles & Permissions | IntraShip UAM",
@@ -14,16 +14,18 @@ export const metadata = {
  * Strictly dynamic - powered directly by the Backend API
  */
 export default async function RolesPage() {
-  const cookieStore = await cookies();
-  const isVerified = cookieStore.get("uam_verified")?.value === "true";
-  const token =
-    cookieStore.get("uam_auth_token")?.value ||
-    cookieStore.get("token")?.value ||
-    cookieStore.get("access_token")?.value;
-
-  // Validate server-side session authentication
-  if (!isVerified || !token) {
-    redirect("/login?from=/roles");
+  const { allowed } = await checkServerRouteAccess("roles", "read", "/roles");
+  if (!allowed) {
+    return (
+      <div className="p-6">
+        <ForbiddenState
+          title="Access Denied"
+          description="You do not have permission from the backend to view Roles & Permissions. Please contact an administrator."
+          backHref="/dashboard"
+          backLabel="Return to Dashboard"
+        />
+      </div>
+    );
   }
 
   const roles = await getRoles().catch(() => []);

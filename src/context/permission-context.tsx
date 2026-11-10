@@ -52,8 +52,8 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
       action: keyof CrudPermissions | "create" | "read" | "update" | "delete",
     ): boolean => {
       // Super admin has unrestricted access across all modules
-      const roleNorm = (permissions?.role || "").toLowerCase();
-      if (roleNorm.includes("superadmin") || roleNorm === "super admin") {
+      const roleNorm = (permissions?.role || "").toLowerCase().replace(/[\s_-]+/g, "");
+      if (roleNorm.includes("superadmin")) {
         return true;
       }
 

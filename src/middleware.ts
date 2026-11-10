@@ -31,26 +31,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/login?from=${encodeURIComponent(path)}`, request.url));
   }
 
-  // Edge RBAC Route Guards for authenticated users
-  if (isVerified) {
-    const userRole = request.cookies.get("uam_user_role")?.value?.toLowerCase();
-    const normRole = (userRole || "").replace(/[\s_-]+/g, "");
-
-    // Prevent restricted roles from accessing Audit Logs
-    if (path.startsWith("/audit") && (normRole === "teacher" || normRole === "guest")) {
-      return NextResponse.redirect(new URL("/dashboard?error=unauthorized", request.url));
-    }
-
-    // Only block roles that explicitly lack access to Settings (e.g. viewer, guest)
-    if (
-      (path.startsWith("/settings") || path.startsWith("/system-settings")) &&
-      userRole &&
-      (normRole === "viewer" || normRole === "guest")
-    ) {
-      return NextResponse.redirect(new URL("/dashboard?error=unauthorized", request.url));
-    }
-  }
-
   // If already logged in and visiting auth pages, redirect to dashboard
   if ((path === "/login" || path === "/verify-otp" || path === "/forgot-password" || path === "/reset-password") && isVerified) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -81,6 +61,8 @@ export const config = {
     "/audit/:path*",
     "/settings",
     "/settings/:path*",
+    "/system-settings",
+    "/system-settings/:path*",
     "/login",
     "/verify-otp",
     "/forgot-password",

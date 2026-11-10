@@ -1,8 +1,8 @@
 import React from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { getRoles } from "../../actions/getRoles";
 import CreateEditRoleView from "../../components/CreateEditRoleView";
+import { checkServerRouteAccess } from "@/lib/auth/server-permissions";
+import { ForbiddenState } from "@/components/ui/ForbiddenState";
 
 export const metadata = {
   title: "Edit Role | IntraShip UAM",
@@ -14,17 +14,21 @@ interface EditRolePageProps {
 }
 
 export default async function EditRolePage({ params }: EditRolePageProps) {
-  const cookieStore = await cookies();
-  const isVerified = cookieStore.get("uam_verified")?.value === "true";
-  const token =
-    cookieStore.get("uam_auth_token")?.value ||
-    cookieStore.get("uam_pending_token")?.value;
-
-  if (!isVerified || !token) {
-    redirect("/login?from=/roles");
+  const { id } = await params;
+  const { allowed } = await checkServerRouteAccess("roles", "update", `/roles/edit/${id}`);
+  if (!allowed) {
+    return (
+      <div className="p-6">
+        <ForbiddenState
+          title="Access Denied"
+          description="You do not have permission from the backend to edit roles. Please contact an administrator."
+          backHref="/roles"
+          backLabel="Back to Roles"
+        />
+      </div>
+    );
   }
 
-  const { id } = await params;
   const roles = await getRoles().catch(() => []);
 
   return <CreateEditRoleView initialRoles={roles} initialSelectedRoleId={id} />;

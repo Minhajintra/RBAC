@@ -6,6 +6,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { PermissionProvider } from "@/context/permission-context";
+import { RoutePermissionGuard } from "@/components/ui/RoutePermissionGuard";
 import { authStorage } from "@/lib/auth-storage";
 
 /**
@@ -84,7 +85,7 @@ export default function DashboardRouteLayout({
           <Header onOpenMobileSidebar={() => setMobileOpen(true)} />
 
           <main className="flex-1 p-3.5 sm:p-5 md:p-8 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
-            {children}
+            <RoutePermissionGuard>{children}</RoutePermissionGuard>
           </main>
 
           <Footer />

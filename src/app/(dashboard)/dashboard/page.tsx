@@ -13,6 +13,8 @@ import RoleUsersChart from "./components/charts/RoleUsersChart";
 import InterfaceAccessChart from "./components/charts/InterfaceAccessChart";
 import SecurityWidget from "./components/SecurityWidget";
 import LoginHistoryTable from "./components/tables/LoginHistoryTable";
+import { checkServerRouteAccess } from "@/lib/auth/server-permissions";
+import { ForbiddenState } from "@/components/ui/ForbiddenState";
 
 export const metadata = {
   title: "Dashboard | IntraShip UAM",
@@ -24,6 +26,20 @@ export const metadata = {
  * Fetches dashboard data concurrently and passes it to presentation components
  */
 export default async function DashboardPage() {
+  const { allowed } = await checkServerRouteAccess("dashboard", "read", "/dashboard");
+  if (!allowed) {
+    return (
+      <div className="p-6">
+        <ForbiddenState
+          title="Access Denied"
+          description="You do not have permission from the backend to view Dashboard. Please contact an administrator."
+          backHref="/login"
+          backLabel="Back to Login"
+        />
+      </div>
+    );
+  }
+
   const [
     kpis,
     roleUsers,

@@ -1,8 +1,8 @@
 import React from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { getRoles } from "../actions/getRoles";
 import CreateEditRoleView from "../components/CreateEditRoleView";
+import { checkServerRouteAccess, RouteAction } from "@/lib/auth/server-permissions";
+import { ForbiddenState } from "@/components/ui/ForbiddenState";
 
 export const metadata = {
   title: "Create & Edit Role | IntraShip UAM",
@@ -18,19 +18,31 @@ interface CreateRolePageProps {
  * Provides comprehensive role creation and editing with granular permission management.
  */
 export default async function CreateRolePage({ searchParams }: CreateRolePageProps) {
-  const cookieStore = await cookies();
-  const isVerified = cookieStore.get("uam_verified")?.value === "true";
-  const token =
-    cookieStore.get("uam_auth_token")?.value ||
-    cookieStore.get("token")?.value ||
-    cookieStore.get("access_token")?.value ||
-    cookieStore.get("uam_pending_token")?.value;
+  const resolvedParams = searchParams ? await searchParams : {};
+  const mode = resolvedParams.mode;
+  const requiredAction: RouteAction =
+    mode === "create"
+      ? "create"
+      : mode === "edit"
+        ? "update"
+        : mode === "delete"
+          ? "delete"
+          : "any_write";
 
-  if (!isVerified || !token) {
-    redirect("/login?from=/roles/create");
+  const { allowed } = await checkServerRouteAccess("roles", requiredAction, "/roles/create");
+  if (!allowed) {
+    return (
+      <div className="p-6">
+        <ForbiddenState
+          title="Access Denied"
+          description="You do not have permission from the backend to create, edit, or delete roles. Please contact an administrator."
+          backHref="/roles"
+          backLabel="Back to Roles"
+        />
+      </div>
+    );
   }
 
-  const resolvedParams = searchParams ? await searchParams : {};
   const roles = await getRoles().catch(() => []);
 
   return (

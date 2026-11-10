@@ -1,10 +1,9 @@
 import React from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { getAuditLogs } from "./actions/getAuditLogs";
 import { getAuditStatsAction } from "./actions/getAuditStats";
 import AuditLogsModule from "./components/AuditLogsModule";
 import { ForbiddenState } from "@/components/ui/ForbiddenState";
+import { checkServerRouteAccess } from "@/lib/auth/server-permissions";
 
 export const metadata = {
   title: "Audit Logs | IntraShip UAM",
@@ -13,25 +12,12 @@ export const metadata = {
 
 /**
  * Audit Logs Page Orchestrator (Server Component)
- * Validates authenticated server session and pre-fetches initial audit data.
+ * Validates authenticated server session, backend RBAC permission, and pre-fetches initial audit data.
  * Gracefully renders ForbiddenState on HTTP 403 without converting to HTTP 500 or crashing.
  */
 export default async function AuditLogsPage() {
-  const cookieStore = await cookies();
-  const isVerified = cookieStore.get("uam_verified")?.value === "true";
-  const token =
-    cookieStore.get("uam_auth_token")?.value ||
-    cookieStore.get("token")?.value ||
-    cookieStore.get("access_token")?.value;
-  const userRole = cookieStore.get("uam_user_role")?.value;
-
-  // Server-side session authentication validation
-  if (!isVerified || !token) {
-    redirect("/login?from=/audit");
-  }
-
-  // Server-side role check: Teacher role does not have access to audit logs
-  if (userRole && userRole.toLowerCase() === "teacher") {
+  const { allowed } = await checkServerRouteAccess("audit", "read", "/audit");
+  if (!allowed) {
     return (
       <div className="p-6">
         <ForbiddenState
