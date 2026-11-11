@@ -38,7 +38,7 @@ export function AuditFilters({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-[#16382b]">
-            Event history
+            Login history
           </h2>
           <p className="text-xs text-[#6b7c72] mt-0.5">
             Workspace activity, newest first

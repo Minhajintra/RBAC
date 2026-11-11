@@ -214,7 +214,7 @@ export function AuditLogsModule({
               <SlidersHorizontal className="w-4 h-4" />
             </div>
             <div className="text-xs font-semibold text-[#6b7c72]">
-              Audit Events
+              Audit Login
             </div>
             <div className="flex items-baseline justify-between mt-1">
               <span className="text-2xl sm:text-3xl font-extrabold text-[#16382b]">
@@ -237,7 +237,7 @@ export function AuditLogsModule({
               <Check className="w-4 h-4" />
             </div>
             <div className="text-xs font-semibold text-[#6b7c72]">
-              Successful events
+              Successful Login
             </div>
             <div className="flex items-baseline justify-between mt-1">
               <span className="text-2xl sm:text-3xl font-extrabold text-[#16382b]">
@@ -260,7 +260,7 @@ export function AuditLogsModule({
               <X className="w-4 h-4" />
             </div>
             <div className="text-xs font-semibold text-[#6b7c72]">
-              Failed events
+              Failed Login
             </div>
             <div className="flex items-baseline justify-between mt-1">
               <span className="text-2xl sm:text-3xl font-extrabold text-[#16382b]">
@@ -283,7 +283,7 @@ export function AuditLogsModule({
               <Clock className="w-4 h-4" />
             </div>
             <div className="text-xs font-semibold text-[#6b7c72]">
-              Events today
+              Login today
             </div>
             <div className="flex items-baseline justify-between mt-1">
               <span className="text-2xl sm:text-3xl font-extrabold text-[#16382b]">

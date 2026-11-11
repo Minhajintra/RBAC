@@ -244,7 +244,7 @@ export function computeAuditStats(events: AuditEvent[]): AuditStats {
     totalEvents: {
       value: total.toLocaleString(),
       badge: `${total} logged`,
-      subtitle: "total audit events",
+      subtitle: "total audit Login",
     },
     successfulEvents: {
       value: successful.toLocaleString(),

@@ -116,7 +116,7 @@ export default function Header({
           {header.language}
         </div>
 
-        <button
+        {/* <button
           type="button"
           onClick={onNotificationsClick}
           aria-label="Notifications"
@@ -124,7 +124,7 @@ export default function Header({
         >
           <Bell className="w-4 h-4" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#225740] ring-2 ring-white"></span>
-        </button>
+        </button> */}
 
         {/* User profile dropdown badge */}
         <div className="flex items-center gap-2 pl-1 sm:pl-2 border-l border-[#e5ece7]">

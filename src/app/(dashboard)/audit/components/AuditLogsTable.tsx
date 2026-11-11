@@ -149,7 +149,7 @@ export function AuditLogsTable({
                       <Search className="w-5 h-5 text-[#6b7c72]" />
                     </div>
                     <p className="text-sm font-bold text-[#16382b]">
-                      No audit events found
+                      No audit Login found
                     </p>
                     <p className="text-xs text-[#6b7c72]">
                       No audit logs matched your active search or filter criteria.
@@ -172,7 +172,7 @@ export function AuditLogsTable({
       {/* Pagination Footer matching FG-UAM-15 */}
       <div className="mt-4 pt-4 border-t border-[#f0f4f1] flex flex-col sm:flex-row items-center justify-between gap-3">
         <span className="text-xs text-[#6b7c72]">
-          Showing {startRecord}–{endRecord} of {totalCountToDisplay.toLocaleString()} events
+          Showing {startRecord}–{endRecord} of {totalCountToDisplay.toLocaleString()} Login
         </span>
 
         <div className="flex items-center gap-2">
